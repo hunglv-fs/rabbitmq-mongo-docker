@@ -1,0 +1,79 @@
+services:
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    container_name: "rabbitmq"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - rabbitmq_network
+    
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+  mongo:
+    image: "mongo"
+    container_name: "mongodb"
+    ports:
+      - "27017:27017"
+    networks:
+      - rabbitmq_network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+  redis:
+    image: "redis"
+    container_name: "redis"
+    ports:
+      - "6379:6379"
+    networks:
+      - rabbitmq_network
+  producer:
+    build: ./producer
+    container_name: "producer"
+    command: ["node", "app.js"]
+    # restart: unless-stopped
+    ports:
+      - "3001:3001"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - rabbitmq_network
+
+  consumer:
+    build: ./consumer
+    container_name: "consumer"
+    command: ["node", "app.js"]
+    # restart: unless-stopped
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+        - rabbitmq_network
+  frontend:
+    build: ./frontend
+    container_name: "frontend"
+    # restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - producer
+    networks:
+      - rabbitmq_network
+networks:
+  rabbitmq_network:  # Định nghĩa một network chung
