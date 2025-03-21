@@ -71,3 +71,96 @@ Here are some common issues and their solutions:
 ## License
 
 This project is licensed under the MIT License. See the `LICENSE` file for details.
+
+
+
+## Benchmark
+
+---
+
+### **1. Adjusting Sending Rate (Producer)**  
+#### **Reduce `--rate` (messages per second)**  
+- Currently, you have set `--rate 100000`. You can start with a lower rate:  
+  ```sh
+  docker run --rm pivotalrabbitmq/perf-test --uri amqp://guest:guest@host.docker.internal --rate 1000 -x 30
+  ```
+- Then gradually increase:  
+  ```sh
+  --rate 5000
+  --rate 10000
+  --rate 50000
+  --rate 100000
+  ```
+
+---
+
+### **2. Adjusting the Number of Producers (`-y`)**  
+- By default, PerfTest runs **1 producer**.  
+- You can try increasing the number of producers:  
+  ```sh
+  -y 1  # 1 producer
+  -y 5  # 5 producers
+  -y 10 # 10 producers
+  -y 20 # 20 producers
+  ```
+  Example:  
+  ```sh
+  docker run --rm pivotalrabbitmq/perf-test --uri amqp://guest:guest@host.docker.internal --rate 10000 -x 30 -y 5
+  ```
+
+---
+
+### **3. Adjusting the Number of Consumers (`-c`)**  
+- By default, PerfTest runs **1 consumer**.  
+- You can try increasing the number of consumers:  
+  ```sh
+  -c 1  # 1 consumer
+  -c 5  # 5 consumers
+  -c 10 # 10 consumers
+  -c 20 # 20 consumers
+  ```
+  Example:  
+  ```sh
+  docker run --rm pivotalrabbitmq/perf-test --uri amqp://guest:guest@host.docker.internal --rate 10000 -x 30 -y 5 -c 5
+  ```
+
+---
+
+### **4. Adjusting Message Size (`--size`)**  
+- By default, PerfTest sends **small messages**.  
+- If you want to test with larger messages:  
+  ```sh
+  --size 1024  # 1KB
+  --size 4096  # 4KB
+  --size 16384 # 16KB
+  ```
+  Example:  
+  ```sh
+  docker run --rm pivotalrabbitmq/perf-test --uri amqp://guest:guest@host.docker.internal --rate 10000 -x 30 --size 1024
+  ```
+
+---
+
+### **5. Running Tests from Low to High Load**  
+You can follow this order:  
+
+1. **Start with a light load**  
+   ```sh
+   docker run --rm pivotalrabbitmq/perf-test --uri amqp://guest:guest@host.docker.internal --rate 1000 -x 30 -y 1 -c 1
+   ```  
+2. **Increase sending rate (`--rate`)**  
+   ```sh
+   --rate 5000, 10000, 50000, 100000
+   ```  
+3. **Increase the number of producers (`-y`)**  
+   ```sh
+   -y 1, 5, 10, 20
+   ```  
+4. **Increase the number of consumers (`-c`)**  
+   ```sh
+   -c 1, 5, 10, 20
+   ```  
+5. **Increase message size (`--size`)**  
+   ```sh
+   --size 1024, 4096, 16384
+   ```  
