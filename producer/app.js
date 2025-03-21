@@ -6,19 +6,49 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-
-
 const RABBITMQ_URL = 'amqp://rabbitmq:5672';
-
+const message_count = 10000; // Number of messages to send
 async function sendMessages() {
   const connection = await amqp.connect(RABBITMQ_URL);
   const channel = await connection.createChannel();
   const queue = 'task_queue';
   await channel.assertQueue(queue, { durable: true });
 
-  for (let i = 0; i < 10000; i++) {
-    const msg = `Message ${i}`;
-    channel.sendToQueue(queue, Buffer.from(msg), { persistent: true });
+  for (let i = 0; i < message_count; i++) {
+    // const msg = `Message ${i}`;
+    const messageObj = {
+      name: `User ${i}`,
+      email: `user${i}@example.com`,
+      message: `Hello from user ${i}`,
+      type: 'email',
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      sentAt: null,
+      error: null,
+      attempts: 0,
+      lastAttempt: null,
+      important: i%0==0 ? true : false,
+      visibility : i%0==0 ? 'public' : 'private',
+      priority: 1,
+      tags: [ 'tag1', 'tag2' ],
+      metadata: {
+        source: 'rabbitmq-mongo-docker',
+        version: '1.0.0',
+        timestamp: new Date().toISOString()
+      },
+      sent: false,
+      size: 0.0001,
+      attachments: [
+        {
+          filename: `attachment${i}.txt`,
+          size: 0.0001,
+          type: 'text/plain'
+        }
+      ]
+    };
+    channel.sendToQueue(queue, Buffer.from(JSON.stringify(messageObj)), {
+      persistent: true,
+    });
   }
 
   console.log('Sent 10,000 messages');

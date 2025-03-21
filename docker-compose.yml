@@ -27,6 +27,42 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+  postgres:
+    image: "postgres"
+    container_name: "postgres"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_AUTH_METHOD: trust
+    ports:
+      - "5433:5432"
+    networks:
+      - rabbitmq_network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+  mysql:
+    image: "mysql"
+    container_name: "mysql"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: mysql
+      MYSQL_USER: mysql
+      MYSQL_PASSWORD: mysql
+    ports:
+      - "3307:3306"
+    networks:
+      - rabbitmq_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
   redis:
     image: "redis"
     container_name: "redis"
@@ -75,5 +111,13 @@ services:
       - producer
     networks:
       - rabbitmq_network
+  mailhog:
+    image: mailhog/mailhog
+    container_name: "mailhog"
+    ports:
+      - "1025:1025"  # SMTP server
+      - "8025:8025"  # Web UI
+    networks:
+      - rabbitmq_network
 networks:
-  rabbitmq_network:  # Định nghĩa một network chung
+  rabbitmq_network:  # Network common to all services
