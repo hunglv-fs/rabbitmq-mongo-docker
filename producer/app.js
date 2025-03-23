@@ -7,7 +7,7 @@ app.use(cors());
 app.use(express.json());
 
 const RABBITMQ_URL = 'amqp://rabbitmq:5672';
-const message_count = 10000; // Number of messages to send
+const message_count = 4000; // Number of messages to send
 async function sendMessages() {
   const connection = await amqp.connect(RABBITMQ_URL);
   const channel = await connection.createChannel();
@@ -71,7 +71,7 @@ app.post('/send-messages', async (req, res) => {
 
 app.get('/status', async (req, res) => {
   const processedCount = await redisClient.get('processed_count') || '0';
-  res.json({ processed: parseInt(processedCount), total: 10000 });
+  res.json({ processed: parseInt(processedCount), total: message_count });
 });
 const PORT = 3001;
 app.listen(PORT, () => {
